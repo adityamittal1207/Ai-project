@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     Question: {{input}}""")
 
-    api_key = "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"
+    api_key = ""
     analyzer = AILegislationAnalyzer(urls, api_key)
     final_result = analyzer.run_analysis(prompt_template)
 

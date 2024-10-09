@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import typing_extensions
-from typing import List, Union, Iterable, Optional, overload
+from typing import List, Union, Iterable, Optional
 from functools import partial
-from typing_extensions import Literal
+from typing_extensions import Literal, overload
 
 import httpx
 
@@ -63,10 +63,21 @@ class Runs(SyncAPIResource):
 
     @cached_property
     def with_raw_response(self) -> RunsWithRawResponse:
+        """
+        This property can be used as a prefix for any HTTP method call to return the
+        the raw response object instead of the parsed content.
+
+        For more information, see https://www.github.com/openai/openai-python#accessing-raw-response-data-eg-headers
+        """
         return RunsWithRawResponse(self)
 
     @cached_property
     def with_streaming_response(self) -> RunsWithStreamingResponse:
+        """
+        An alternative to `.with_raw_response` that doesn't eagerly read the response body.
+
+        For more information, see https://www.github.com/openai/openai-python#with_streaming_response
+        """
         return RunsWithStreamingResponse(self)
 
     @overload
@@ -138,7 +149,7 @@ class Runs(SyncAPIResource):
 
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           model: The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -156,11 +167,11 @@ class Runs(SyncAPIResource):
               and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
               Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-              Outputs which guarantees the model will match your supplied JSON schema. Learn
-              more in the
+              Outputs which ensures the model will match your supplied JSON schema. Learn more
+              in the
               [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-              Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+              Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
               message the model generates is valid JSON.
 
               **Important:** when using JSON mode, you **must** also instruct the model to
@@ -282,7 +293,7 @@ class Runs(SyncAPIResource):
 
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           model: The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -300,11 +311,11 @@ class Runs(SyncAPIResource):
               and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
               Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-              Outputs which guarantees the model will match your supplied JSON schema. Learn
-              more in the
+              Outputs which ensures the model will match your supplied JSON schema. Learn more
+              in the
               [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-              Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+              Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
               message the model generates is valid JSON.
 
               **Important:** when using JSON mode, you **must** also instruct the model to
@@ -422,7 +433,7 @@ class Runs(SyncAPIResource):
 
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           model: The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -440,11 +451,11 @@ class Runs(SyncAPIResource):
               and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
               Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-              Outputs which guarantees the model will match your supplied JSON schema. Learn
-              more in the
+              Outputs which ensures the model will match your supplied JSON schema. Learn more
+              in the
               [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-              Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+              Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
               message the model generates is valid JSON.
 
               **Important:** when using JSON mode, you **must** also instruct the model to
@@ -612,7 +623,7 @@ class Runs(SyncAPIResource):
         Args:
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           extra_headers: Send extra headers
@@ -1414,10 +1425,21 @@ class AsyncRuns(AsyncAPIResource):
 
     @cached_property
     def with_raw_response(self) -> AsyncRunsWithRawResponse:
+        """
+        This property can be used as a prefix for any HTTP method call to return the
+        the raw response object instead of the parsed content.
+
+        For more information, see https://www.github.com/openai/openai-python#accessing-raw-response-data-eg-headers
+        """
         return AsyncRunsWithRawResponse(self)
 
     @cached_property
     def with_streaming_response(self) -> AsyncRunsWithStreamingResponse:
+        """
+        An alternative to `.with_raw_response` that doesn't eagerly read the response body.
+
+        For more information, see https://www.github.com/openai/openai-python#with_streaming_response
+        """
         return AsyncRunsWithStreamingResponse(self)
 
     @overload
@@ -1489,7 +1511,7 @@ class AsyncRuns(AsyncAPIResource):
 
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           model: The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -1507,11 +1529,11 @@ class AsyncRuns(AsyncAPIResource):
               and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
               Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-              Outputs which guarantees the model will match your supplied JSON schema. Learn
-              more in the
+              Outputs which ensures the model will match your supplied JSON schema. Learn more
+              in the
               [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-              Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+              Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
               message the model generates is valid JSON.
 
               **Important:** when using JSON mode, you **must** also instruct the model to
@@ -1633,7 +1655,7 @@ class AsyncRuns(AsyncAPIResource):
 
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           model: The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -1651,11 +1673,11 @@ class AsyncRuns(AsyncAPIResource):
               and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
               Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-              Outputs which guarantees the model will match your supplied JSON schema. Learn
-              more in the
+              Outputs which ensures the model will match your supplied JSON schema. Learn more
+              in the
               [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-              Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+              Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
               message the model generates is valid JSON.
 
               **Important:** when using JSON mode, you **must** also instruct the model to
@@ -1773,7 +1795,7 @@ class AsyncRuns(AsyncAPIResource):
 
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           model: The ID of the [Model](https://platform.openai.com/docs/api-reference/models) to
@@ -1791,11 +1813,11 @@ class AsyncRuns(AsyncAPIResource):
               and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
 
               Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured
-              Outputs which guarantees the model will match your supplied JSON schema. Learn
-              more in the
+              Outputs which ensures the model will match your supplied JSON schema. Learn more
+              in the
               [Structured Outputs guide](https://platform.openai.com/docs/guides/structured-outputs).
 
-              Setting to `{ "type": "json_object" }` enables JSON mode, which guarantees the
+              Setting to `{ "type": "json_object" }` enables JSON mode, which ensures the
               message the model generates is valid JSON.
 
               **Important:** when using JSON mode, you **must** also instruct the model to
@@ -1964,7 +1986,7 @@ class AsyncRuns(AsyncAPIResource):
         Args:
           metadata: Set of 16 key-value pairs that can be attached to an object. This can be useful
               for storing additional information about the object in a structured format. Keys
-              can be a maximum of 64 characters long and values can be a maxium of 512
+              can be a maximum of 64 characters long and values can be a maximum of 512
               characters long.
 
           extra_headers: Send extra headers
