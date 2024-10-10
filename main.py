@@ -17,7 +17,7 @@ urls = [
 ]
 
 # Load documents with metadata
-embeddings = OpenAIEmbeddings(openai_api_key="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")
+embeddings = OpenAIEmbeddings(openai_api_key="")
 
 loader = WebBaseLoader(urls)
 docs = loader.load()
@@ -32,7 +32,7 @@ vector = FAISS.from_documents(documents, embeddings)
 
 retriever = vector.as_retriever()
 
-llm = ChatOpenAI(openai_api_key="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")
+llm = ChatOpenAI(openai_api_key="")
 
 output_parser = StrOutputParser()
 
