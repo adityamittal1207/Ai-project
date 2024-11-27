@@ -7,36 +7,11 @@ app = Flask(__name__)
 def index():
     if request.method == 'POST':
         urls = request.form['urls'].splitlines()
-        api_key = ""
+        api_key = "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"
 
         analyzer = AILegislationAnalyzer(urls, api_key)
 
-        response_template = """
-        For all documents listed, identify all relevant pros, cons, and neutral viewpoints. Ensure each document is addressed separately.
-
-        - **Document Identifier:** 
-          - Pros:
-            - ...
-          - Cons:
-            - ...
-          - Neutral:
-            - ...
-
-        List out every distinct point that you can extract from each document.
-        """
-
-        prompt_template = f"""
-        You are an AI legislation policy-maker analyzing multiple documents. For all documents, extract every pro, con, and neutral viewpoint on generative AI. Strictly use information found in the documents for all points. Follow the response template:
-
-        {response_template}
-
-        <context>
-        {{context}}
-        </context>
-
-        Question: {{input}}"""
-
-        final_result = analyzer.run_analysis(prompt_template)
+        final_result = analyzer.run_analysis()
         return render_template('results.html', results=final_result)
 
     return render_template('index.html')
