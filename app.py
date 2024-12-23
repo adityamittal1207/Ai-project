@@ -7,7 +7,7 @@ app = Flask(__name__)
 def index():
     if request.method == 'POST':
         urls = request.form['urls'].splitlines()
-        api_key = "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"
+        api_key = "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"
 
         analyzer = AILegislationAnalyzer(urls, api_key)
 
