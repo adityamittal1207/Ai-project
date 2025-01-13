@@ -5,6 +5,11 @@ from langchain_community.document_loaders import WebBaseLoader
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.cluster import AffinityPropagation
+from langchain_core.tools import tool
+import numpy as np
 
 class AILegislationAnalyzer:
     VIEWPOINT_EXTRACTION_TEMPLATE = """
@@ -50,7 +55,6 @@ class AILegislationAnalyzer:
     Respond with only the classification: Pro, Con, or Neutral.
     """
 
-
     def __init__(self, urls, api_key):
         self.urls = urls
         self.api_key = api_key
@@ -59,7 +63,7 @@ class AILegislationAnalyzer:
         self.llm = ChatOpenAI(model="gpt-4o", openai_api_key=api_key)
         self.simplellm = ChatOpenAI(model="gpt-4o-mini", openai_api_key=api_key)
         self.output_parser = StrOutputParser()
-        self.text_splitter = RecursiveCharacterTextSplitter()
+        self.text_splitter = SemanticChunker(self.embeddings)
         self.vector_store = None
 
         self.extraction_prompt_template = ChatPromptTemplate.from_template(f"""
@@ -95,7 +99,8 @@ class AILegislationAnalyzer:
 
     def get_retriever(self, vector_store):
         return vector_store.as_retriever()
-
+    
+    @tool
     def extract_viewpoints(self, doc):
         print("Extracting viewpoints from", doc.metadata["Document Identifier"])
         prompt = self.extraction_prompt_template.format(input="Extract all viewpoints.", context=doc.page_content)
@@ -104,7 +109,7 @@ class AILegislationAnalyzer:
 
         viewpoints = self.parse_viewpoints(response)
         return viewpoints
-
+    
     def classify_viewpoints(self, viewpoints):
         classified_points = {
             'Pros': [],
@@ -114,12 +119,9 @@ class AILegislationAnalyzer:
 
         for viewpoint in viewpoints:
             prompt = self.classification_prompt_template.format(viewpoint=viewpoint)
-            # print(prompt)
             c = self.simplellm | self.output_parser
             response = c.invoke(prompt)
             classification = response.strip()
-
-            # print(viewpoint, classification)
 
             if classification == "Pro":
                 classified_points['Pros'].append(viewpoint)
@@ -128,8 +130,6 @@ class AILegislationAnalyzer:
             elif classification == "Neutral":
                 classified_points['Neutral'].append(viewpoint)
         
-        print(classified_points)
-
         return classified_points
 
     def parse_viewpoints(self, raw_input):
@@ -145,24 +145,31 @@ class AILegislationAnalyzer:
                 viewpoint = line[2:].strip()
                 viewpoints.append(viewpoint)
 
-        print(viewpoints)
-
         return viewpoints
 
-    def verify_point(self, point, search_results):
-        print("Verifying", point)
-        if not search_results:
-            return point, "no", None
-
-        verification_prompt = f"Given the following search results:\n\n{search_results}\n\nIs the following point verified? {point}\n\nPlease respond with just 'yes' or 'no'."
-        verify_chain = self.simplellm | self.output_parser
-        response = verify_chain.invoke(verification_prompt)
-        print(response)
-
-        return point, response.strip().lower(), search_results
+    def verify_point(self, point, document_embeddings, original_chunks):
+        print(f"Verifying point: {point}")
+        
+        point_vector = self.embeddings.embed_query(point)
+        similarities = cosine_similarity([point_vector], document_embeddings).flatten()
+        
+        good_point = np.where(similarities >= 0.87)
+        above_threshold = good_point[0]
+        top_similarities = sorted(above_threshold, key=lambda idx: similarities[idx], reverse=True)
+        
+        print("Top 5 matches with their text content:")
+        for idx in top_similarities[:5]:
+            print(f"  - Document Chunk {idx}: Similarity = {similarities[idx]:.4f}")
+            # print(f"    Chunk Text: {original_chunks[idx].page_content}\n")
+        
+        is_verified = len(above_threshold) > 0
+        return point, "yes" if is_verified else "no", above_threshold
 
     def verify_points_in_document(self, doc, extracted_points):
-        print("Verifying", doc.metadata["Document Identifier"])
+        print(f"Verifying points in {doc.metadata['Document Identifier']}")
+        original_chunks = self.text_splitter.split_documents([doc])
+        doc_embeddings = [self.embeddings.embed_query(chunk.page_content) for chunk in original_chunks]
+        
         verified_points = {
             'Pros': [],
             'Cons': [],
@@ -171,32 +178,30 @@ class AILegislationAnalyzer:
 
         for category, points in extracted_points.items():
             for point in points:
-                search_results = self.vector_store.similarity_search(point)
-                verified_point, verification_response, results = self.verify_point(point, search_results)
-
-                if verification_response == "yes.":
-
-                    doc_id = doc.metadata['Document Identifier']
-                    verified_points[category].append((verified_point, doc_id))
-
+                verified_point, verification_response, matches = self.verify_point(point, doc_embeddings, original_chunks)
+                if verification_response == "yes":
+                    verified_points[category].append((verified_point, doc.metadata['Document Identifier']))
+        
         return verified_points
 
     def combine_verified_points(self, verified_points_list):
-        print('Combining verified points...')
         combined_points = {
             'Pros': {},
             'Cons': {},
             'Neutral': {}
         }
 
-        for idx, points in enumerate(verified_points_list):
+        for points in verified_points_list: 
             for category, verified_points in points.items():
                 for point, doc_id in verified_points:
+                    if "Document Identifier: " in point:
+                        continue
                     if point not in combined_points[category]:
                         combined_points[category][point] = []
                     combined_points[category][point].append(doc_id)
 
         return combined_points
+
 
     def format_points(self, combined_points):
         formatted_output = []
@@ -210,25 +215,19 @@ class AILegislationAnalyzer:
         return "\n".join(formatted_output)
 
     def run_analysis(self):
-        print("Loading documents...")
         documents = self.load_documents()
-
-        print("Splitting documents...")
         split_docs = self.split_documents(documents)
-
-        print("Creating vector store...")
         self.vector_store = self.create_vector_store(split_docs)
 
         verified_points_list = []
 
         for doc in documents:
-            print(f"Processing {doc.metadata['Document Identifier']}...")
-
             viewpoints = self.extract_viewpoints(doc)
             classified_points = self.classify_viewpoints(viewpoints)
             verified_points = self.verify_points_in_document(doc, classified_points)
-
             verified_points_list.append(verified_points)
+        
+        print(verified_points_list)
 
         combined_results = self.combine_verified_points(verified_points_list)
         return self.format_points(combined_results)
@@ -242,8 +241,12 @@ if __name__ == '__main__':
         'https://www.foxnews.com/opinion/forget-criticisms-ai-could-help-keep-children-safe-online',
         "https://www.foxnews.com/opinion/christians-shouldnt-fear-ai-should-partner-with-it"
     ]
+    urls = [
+        "https://outofcontrol.substack.com/p/is-ai-a-tradition-machine",
+        "https://outofcontrol.substack.com/p/large-language-models-could-re-decentralize"
+    ]
 
-    api_key = "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"
+    api_key = "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"
     analyzer = AILegislationAnalyzer(urls, api_key)
     final_result = analyzer.run_analysis()
     print(final_result)
