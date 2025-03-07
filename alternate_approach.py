@@ -56,6 +56,7 @@ class AILegislationAnalyzer:
     """
 
     def __init__(self, urls, api_key):
+        self.threshold = 0.87
         self.urls = urls
         self.api_key = api_key
         self.embeddings = OpenAIEmbeddings(openai_api_key=api_key)
@@ -109,7 +110,7 @@ class AILegislationAnalyzer:
 
         viewpoints = self.parse_viewpoints(response)
         return viewpoints
-    
+    @tool
     def classify_viewpoints(self, viewpoints):
         classified_points = {
             'Pros': [],
@@ -131,7 +132,7 @@ class AILegislationAnalyzer:
                 classified_points['Neutral'].append(viewpoint)
         
         return classified_points
-
+    @tool
     def parse_viewpoints(self, raw_input):
         viewpoints = []
         lines = raw_input.strip().split('\n')
@@ -146,14 +147,14 @@ class AILegislationAnalyzer:
                 viewpoints.append(viewpoint)
 
         return viewpoints
-
+    @tool
     def verify_point(self, point, document_embeddings, original_chunks):
         print(f"Verifying point: {point}")
         
         point_vector = self.embeddings.embed_query(point)
         similarities = cosine_similarity([point_vector], document_embeddings).flatten()
         
-        good_point = np.where(similarities >= 0.87)
+        good_point = np.where(similarities >= self.threshold)
         above_threshold = good_point[0]
         top_similarities = sorted(above_threshold, key=lambda idx: similarities[idx], reverse=True)
         
@@ -164,7 +165,7 @@ class AILegislationAnalyzer:
         
         is_verified = len(above_threshold) > 0
         return point, "yes" if is_verified else "no", above_threshold
-
+    @tool
     def verify_points_in_document(self, doc, extracted_points):
         print(f"Verifying points in {doc.metadata['Document Identifier']}")
         original_chunks = self.text_splitter.split_documents([doc])
@@ -183,7 +184,7 @@ class AILegislationAnalyzer:
                     verified_points[category].append((verified_point, doc.metadata['Document Identifier']))
         
         return verified_points
-
+    @tool
     def combine_verified_points(self, verified_points_list):
         combined_points = {
             'Pros': {},
