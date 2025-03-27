@@ -2,7 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 VIEWPOINT_EXTRACTION_BASE_TEMPLATE = """
     Extract all distinct viewpoints related to generative AI from the provided document. Viewpoints are observations, arguments, or perspectives relevant to the subject, and they should be expressed clearly with evidence or reasoning if present.
-    Ensure the extracted viewpoints are fact-based and concise.
+    Ensure the extracted viewpoints are fact-based and concise. Generate as many viewpoints as possible, and ensure to have enough viewpoints to minimize any ambiguity, with each viewpoint covering its own distinct topic.
 
     Example viewpoints:
     - Generative AI can streamline customer support by providing instant and accurate responses to common inquiries.
@@ -15,7 +15,7 @@ VIEWPOINT_EXTRACTION_BASE_TEMPLATE = """
     - Generative AI could potentially disrupt traditional industries by enabling automation of complex tasks, such as medical diagnosis.
     - There are questions about the accountability of AI-generated content and the difficulty in attributing authorship.
 
-    Use the following response format:
+    YOU MUST USE the following response format:
     - **Document Identifier:** 
     - Viewpoints:
         - ...

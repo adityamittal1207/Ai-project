@@ -1,20 +1,21 @@
 import models
 import prompts
 from state import AgentGraphState
+import csv
 
 class Agent:
-    def __init__(self, state: AgentGraphState, model=None, model_size = "large", openai_key=None, temperature=0, model_endpoint=None, stop=None, output_parser = None, doc = None):
+    def __init__(self, state: AgentGraphState, model = "", model_size = "", api_keys = None, temperature=0, model_endpoint=None, stop=None, output_parser = None, doc = None):
         self.state = state
         self.model = model
         self.model_size = model_size
         self.temperature = temperature
         self.model_endpoint = model_endpoint
         self.stop = stop
-        self.openai_key = openai_key
+        self.api_keys = api_keys
         self.output_parser = output_parser
 
     def get_llm(self):
-        return models.get_large_open_ai(model=self.model, temperature=self.temperature, openai_key = self.openai_key) if self.model_size == "large" else models.get_small_open_ai(model=self.model, temperature=self.temperature, openai_key = self.openai_key)
+        return models.get_model(self.model, api_keys=self.api_keys, temperature=0.05) if self.model_size == "large" else models.get_model("gpt-4o-mini", api_keys=self.api_keys)
 
     def update_state(self, key, value):
         self.state = {**self.state, key: value}
@@ -25,6 +26,8 @@ class ViewpointExtactorAgent(Agent):
         extractor_prompt = prompt.format(input="Extract all viewpoints.", context=doc.page_content)
 
         llm = self.get_llm()
+
+        print(llm)
 
         # print(extractor_prompt)
 
@@ -70,5 +73,10 @@ class ClassifierAgent(Agent):
 
 class EndNodeAgent(Agent):
     def invoke(self):
+        filepath = "responses.csv"
+        with open(filepath, 'a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerows([[self.model, self.state["viewpoints"]]])
+
         self.update_state("end_chain", "end_chain")
         return self.state

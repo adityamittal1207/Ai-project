@@ -1,0 +1,8 @@
+- LLMs can act as "universal APIs," letting different apps and services communicate by interacting with their user interfaces.  
+- They make it easier to connect software in ways that companies didn’t intend, allowing both cooperative and adversarial interoperability.  
+- With LLMs, natural language could become a universal way for systems to communicate, reducing the need for fixed APIs.  
+- They can help create APIs on the fly, solving compatibility issues between old and new software.  
+- Since LLMs interact with software just like humans do, blocking unauthorized connections will become much harder.  
+- AI-driven API translation services could map out platform interactions, making it easier to build connections between different tools.  
+- Generative AI will shift power from large institutions to individuals, decentralizing industries that don’t rely on heavy computation.  
+- By enabling more ways for people and software to connect, LLMs will drive competition and innovation across industries.

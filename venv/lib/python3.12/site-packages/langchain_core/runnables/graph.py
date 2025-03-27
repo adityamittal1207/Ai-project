@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 from collections import defaultdict
-from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
@@ -18,11 +17,13 @@ from typing import (
 )
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel
-
 from langchain_core.utils.pydantic import _IgnoreUnserializable, is_basemodel_subclass
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from pydantic import BaseModel
+
     from langchain_core.runnables.base import Runnable as RunnableType
 
 
@@ -50,9 +51,9 @@ def is_uuid(value: str) -> bool:
     """
     try:
         UUID(value)
-        return True
     except ValueError:
         return False
+    return True
 
 
 class Edge(NamedTuple):
@@ -137,7 +138,7 @@ class Branch(NamedTuple):
 
 
 class CurveStyle(Enum):
-    """Enum for different curve styles supported by Mermaid"""
+    """Enum for different curve styles supported by Mermaid."""
 
     BASIS = "basis"
     BUMP_X = "bumpX"
@@ -169,7 +170,7 @@ class NodeStyles:
 
 
 class MermaidDrawMethod(Enum):
-    """Enum for different draw methods supported by Mermaid"""
+    """Enum for different draw methods supported by Mermaid."""
 
     PYPPETEER = "pyppeteer"  # Uses Pyppeteer to render the graph
     API = "api"  # Uses Mermaid.INK API to render the graph
@@ -306,7 +307,8 @@ class Graph:
 
     def next_id(self) -> str:
         """Return a new unique node
-        identifier that can be used to add a node to the graph."""
+        identifier that can be used to add a node to the graph.
+        """
         return uuid4().hex
 
     def add_node(
@@ -422,7 +424,8 @@ class Graph:
 
     def reid(self) -> Graph:
         """Return a new graph with all nodes re-identified,
-        using their unique, readable names where possible."""
+        using their unique, readable names where possible.
+        """
         node_name_to_ids = defaultdict(list)
         for node in self.nodes.values():
             node_name_to_ids[node.name].append(node.id)
@@ -457,18 +460,21 @@ class Graph:
     def first_node(self) -> Optional[Node]:
         """Find the single node that is not a target of any edge.
         If there is no such node, or there are multiple, return None.
-        When drawing the graph, this node would be the origin."""
+        When drawing the graph, this node would be the origin.
+        """
         return _first_node(self)
 
     def last_node(self) -> Optional[Node]:
         """Find the single node that is not a source of any edge.
         If there is no such node, or there are multiple, return None.
-        When drawing the graph, this node would be the destination."""
+        When drawing the graph, this node would be the destination.
+        """
         return _last_node(self)
 
     def trim_first_node(self) -> None:
         """Remove the first node if it exists and has a single outgoing edge,
-        i.e., if removing it would not leave the graph without a "first" node."""
+        i.e., if removing it would not leave the graph without a "first" node.
+        """
         first_node = self.first_node()
         if (
             first_node
@@ -479,7 +485,8 @@ class Graph:
 
     def trim_last_node(self) -> None:
         """Remove the last node if it exists and has a single incoming edge,
-        i.e., if removing it would not leave the graph without a "last" node."""
+        i.e., if removing it would not leave the graph without a "last" node.
+        """
         last_node = self.last_node()
         if (
             last_node
@@ -556,6 +563,7 @@ class Graph:
         curve_style: CurveStyle = CurveStyle.LINEAR,
         node_colors: Optional[NodeStyles] = None,
         wrap_label_n_words: int = 9,
+        frontmatter_config: Optional[dict[str, Any]] = None,
     ) -> str:
         """Draw the graph as a Mermaid syntax string.
 
@@ -565,6 +573,22 @@ class Graph:
             node_colors: The colors of the nodes. Defaults to NodeStyles().
             wrap_label_n_words: The number of words to wrap the node labels at.
                 Defaults to 9.
+            frontmatter_config (dict[str, Any], optional): Mermaid frontmatter config.
+                Can be used to customize theme and styles. Will be converted to YAML and
+                added to the beginning of the mermaid graph. Defaults to None.
+
+                See more here: https://mermaid.js.org/config/configuration.html.
+
+                Example:
+                ```python
+                {
+                    "config": {
+                        "theme": "neutral",
+                        "look": "handDrawn",
+                        "themeVariables": { "primaryColor": "#e2e2e2"},
+                    }
+                }
+                ```
 
         Returns:
             The Mermaid syntax string.
@@ -584,6 +608,7 @@ class Graph:
             curve_style=curve_style,
             node_styles=node_colors,
             wrap_label_n_words=wrap_label_n_words,
+            frontmatter_config=frontmatter_config,
         )
 
     def draw_mermaid_png(
@@ -596,6 +621,7 @@ class Graph:
         draw_method: MermaidDrawMethod = MermaidDrawMethod.API,
         background_color: str = "white",
         padding: int = 10,
+        frontmatter_config: Optional[dict[str, Any]] = None,
     ) -> bytes:
         """Draw the graph as a PNG image using Mermaid.
 
@@ -610,6 +636,22 @@ class Graph:
                 Defaults to MermaidDrawMethod.API.
             background_color: The color of the background. Defaults to "white".
             padding: The padding around the graph. Defaults to 10.
+            frontmatter_config (dict[str, Any], optional): Mermaid frontmatter config.
+                Can be used to customize theme and styles. Will be converted to YAML and
+                added to the beginning of the mermaid graph. Defaults to None.
+
+                See more here: https://mermaid.js.org/config/configuration.html.
+
+                Example:
+                ```python
+                {
+                    "config": {
+                        "theme": "neutral",
+                        "look": "handDrawn",
+                        "themeVariables": { "primaryColor": "#e2e2e2"},
+                    }
+                }
+                ```
 
         Returns:
             The PNG image as bytes.
@@ -620,6 +662,7 @@ class Graph:
             curve_style=curve_style,
             node_colors=node_colors,
             wrap_label_n_words=wrap_label_n_words,
+            frontmatter_config=frontmatter_config,
         )
         return draw_mermaid_png(
             mermaid_syntax=mermaid_syntax,
@@ -634,7 +677,8 @@ def _first_node(graph: Graph, exclude: Sequence[str] = ()) -> Optional[Node]:
     """Find the single node that is not a target of any edge.
     Exclude nodes/sources with ids in the exclude list.
     If there is no such node, or there are multiple, return None.
-    When drawing the graph, this node would be the origin."""
+    When drawing the graph, this node would be the origin.
+    """
     targets = {edge.target for edge in graph.edges if edge.source not in exclude}
     found: list[Node] = []
     for node in graph.nodes.values():
@@ -647,7 +691,8 @@ def _last_node(graph: Graph, exclude: Sequence[str] = ()) -> Optional[Node]:
     """Find the single node that is not a source of any edge.
     Exclude nodes/targets with ids in the exclude list.
     If there is no such node, or there are multiple, return None.
-    When drawing the graph, this node would be the destination."""
+    When drawing the graph, this node would be the destination.
+    """
     sources = {edge.source for edge in graph.edges if edge.target not in exclude}
     found: list[Node] = []
     for node in graph.nodes.values():
